@@ -14,10 +14,17 @@ class Robot:
     def __init__(self, pos):
         self.pos = pygame.math.Vector2(pos)
 
-        self.v = pygame.math.Vector2(0, Robot.max_vel)
+        self.v = pygame.math.Vector2(0, self.max_vel)
         self.vel = 1
 
         self.f_distance = 0
+
+        self.size = 20
+        self.max_dis = 100
+        self.max_vel = 2
+        self.max_force = 0.1
+        self.desiredSeparation = 50
+        self.slow_down_distance = 50
 
         
 
@@ -26,8 +33,8 @@ class Robot:
         vel, angle = self.v.as_polar()
         angle = angle * math.pi / 180
 
-        #pygame.draw.polygon(display, (255,0,0), ((self.pos.x + Robot.size * 2 * math.cos(angle), self.pos.y + Robot.size * 2 * math.sin(angle)), (self.pos.x + Robot.size * math.sin(angle), self.pos.y - Robot.size * math.cos(angle)), (self.pos.x - Robot.size * math.sin(angle), self.pos.y + Robot.size * math.cos(angle))))
-        pygame.draw.circle(display,(50,50,50), (int(self.pos.x),int(self.pos.y)), 10)
+        pygame.draw.polygon(display, (255,0,0), ((self.pos.x + self.size * 2 * math.cos(angle), self.pos.y + self.size * 2 * math.sin(angle)), (self.pos.x + self.size * math.sin(angle), self.pos.y - self.size * math.cos(angle)), (self.pos.x - self.size * math.sin(angle), self.pos.y + self.size * math.cos(angle))))
+        #pygame.draw.circle(display,(50,50,50), (int(self.pos.x),int(self.pos.y)), 10)
 
 
     def move(self):
@@ -60,7 +67,7 @@ class Robot:
 
         if 0 < angle < 180:
             distances.append(math.fabs((displayHeight - self.pos.y)/math.sin(angle)))
-        distances.append(Robot.max_dis)
+        distances.append(self.max_dis)
 
 
         if -90 < angle < 90:
@@ -69,7 +76,7 @@ class Robot:
 
         if -180 < angle < -90 or 90 < angle < 180:
             distances.append(math.fabs(self.pos.x / math.cos(math.pi - angle)))
-        distances.append(Robot.max_dis)
+        distances.append(self.max_dis)
 
 
         return min(distances)
@@ -85,14 +92,14 @@ class Robot:
         if d == 0:
             return pygame.math.Vector2()
         desired = desired.normalize()
-        if d > Robot.slow_down_distance:
-            desired *= Robot.max_vel
+        if d > self.slow_down_distance:
+            desired *= self.max_vel
         else:
-            desired *= Robot.max_vel * d / Robot.slow_down_distance
+            desired *= self.max_vel * d / self.slow_down_distance
         steering = pygame.math.Vector2()
         steering = desired - self.v
 
-        steering.scale_to_length(Robot.max_force)
+        steering.scale_to_length(self.max_force)
 
 
         return steering
@@ -105,7 +112,7 @@ class Robot:
         for i in range(len(others)):
             d = self.pos.distance_to(others[i].pos)
 
-            if (d > 0) and d < Robot.desiredSeparation:
+            if (d > 0) and d < self.desiredSeparation:
                 difference = pygame.math.Vector2
                 difference = self.pos - others[i].pos
                 difference.normalize()
@@ -116,12 +123,12 @@ class Robot:
         if count > 0 and sum.length() > 0:
             sum /= count
             sum.normalize()
-            sum *= Robot.max_vel
+            sum *= self.max_vel
 
             steering = pygame.math.Vector2()
             steering = sum - self.v
-            if steering.length() > Robot.max_force:
-                steering.scale_to_length(Robot.max_force)
+            if steering.length() > self.max_force:
+                steering.scale_to_length(self.max_force)
 
 
             return steering
@@ -146,12 +153,12 @@ class Robot:
         if count > 0 and sum.length() > 0:
             sum /= count
             sum.normalize()
-            sum *= Robot.max_vel
+            sum *= self.max_vel
 
             steering = pygame.math.Vector2()
             steering = sum - self.v
-            if steering.length() > Robot.max_force:
-                steering.scale_to_length(Robot.max_force)
+            if steering.length() > self.max_force:
+                steering.scale_to_length(self.max_force)
 
             return steering
 
@@ -165,7 +172,7 @@ class Robot:
         seekForce = self.seek(target)
         avoidanceForce = self.obstaclesAvoidance(obstacles)
         separationForce *= 1.8
-        seekForce *= 0
+        seekForce *= 1
         avoidanceForce *= 1.5
 
         self.v += separationForce
